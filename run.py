@@ -53,8 +53,6 @@ def experiment(_method, url):
             r'-H "Pragma: no-cache" -H "Expires: 0" -w "@curl-format.txt" ' +
             r'-o /dev/null -s >> ' + out_name
         )
-        result = process(out_name, _method)
-        send_data(result)
     except KeyboardInterrupt: 
         exit(1)
 
@@ -66,6 +64,11 @@ try:
             print(f'[{i}] {key}')
         print(f" [{i}] Backing off from keep alive ... ")
         time.sleep(300)
+
+    for file in URLS.keys():
+        filename = 'curl_' + file + '.csv'
+        result = process(filename, file)
+        send_data(result,file)
 except KeyboardInterrupt: 
     exit(0)
 
