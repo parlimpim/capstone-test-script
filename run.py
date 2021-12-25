@@ -1,10 +1,7 @@
-#! python3 
 import os
-import time
-import pandas as pd
 import json
 import requests
-import numpy
+import pandas as pd
 
 # Brief info found at
 # https://netbeez.net/blog/http-transaction-timing-breakdown-with-curl/
@@ -17,58 +14,45 @@ import numpy
 # starttransfer: The time, in seconds, it took from the start until the first byte was just about to be transferred. This includes time_pretransfer and also the time the server needed to calculate the result.
 # total: The total time, in seconds, that the full operation lasted. The time will be displayed with millisecond resolution.
 
-MAX_ITER = 10
-
-URLS = {
-    'gzip-static': 'https://us.taa.computer/sl-min-original.js',
-    'prod': 'https://elastic.snaplogic.com/sl/js/designer/sl-min.js',
-    'uat': 'https://uat.elastic.snaplogic.com/sl/js/designer/sl-min.js', 
-    'gzip-nostatic': 'https://us.taa.computer/sl-min-original-nostaic.js',
-    'no-gzip': 'https://us2.taa.computer/sl-min-original.js',
-}
+MAX_ITER = 100
+targets = {'dns': 'https://dns.taa.computer', 'anycast': 'https://anycast.taa.computer', 'traditional': 'https://us.taa.computer'}
+files  = ['sl-min-original-nostaic.js']
 
 columns = [
     "time_namelookup", "time_connect", "time_appconnect",
-    "time_pretransfer", "time_redirect", "time_total",
-    "size_download", "remote_ip"
+    "time_pretransfer", "time_redirect", "time_total"
 ]
 
-def process(filename, _method):
+def process(filename, _method, testedfile, server_location):
     df = pd.read_csv(filename, names=columns)
     df['location'] = os.getenv('location')
     df['provider'] = os.getenv('provider')
     df['method'] = _method
+    df['filename'] = testedfile
+    df['server_location'] = server_location.strip()
     return df
 
-def send_data(df,method):
-    requests.post(url=f"http://meme.peem.in/capstone/store-json/{os.getenv('provider')}_{os.getenv('location')}_{method}",data=df.to_json())
-    print(method)
+def send_data(df,method,filename):
+    requests.post(url=f"http://meme.peem.in/capstone/store-json/{os.getenv('provider')}_{os.getenv('location')}_{method}_{filename}",data=df.to_json())
     print("Request Sent!")
 
-def experiment(_method, url): 
-    out_name = 'curl_' + _method + '.csv'
-    try:
-        os.system('curl --no-keepalive '+ url + r' -H "Cache-Control: no-cache, no-store, must-revalidate" '+
-            r'-H "Accept-Encoding: gzip,deflate" -H "Keep-Alive: timeout=0, max=1" -H "Connection: close" '
+def experiment(_method, filename): 
+    out_name = _method + '_' + filename.replace('.', '-') + '.csv'
+    url = targets[_method] + '/' + filename
+    for i in range(MAX_ITER):
+        os.system('curl '+ url + r' -H "Cache-Control: no-cache, no-store, must-revalidate" '+
             r'-H "Pragma: no-cache" -H "Expires: 0" -w "@curl-format.txt" ' +
             r'-o /dev/null -s >> ' + out_name
         )
-    except KeyboardInterrupt: 
-        exit(1)
+    server_location = requests.get(targets[_method] + '/' + 'location.txt')
+    result = process(out_name, _method, filename, server_location.text)
+    send_data(result,_method,filename)
 
-try: 
-    print("provider: {} location: {}".format(os.getenv('provider'),os.getenv('location')))
-    for i in range(MAX_ITER):
-        for key, target in URLS.items():
-            experiment(key, target)
-            print(f'[{i}] {key}')
-        print(f" [{i}] Backing off from keep alive ... ")
-        time.sleep(300)
-
-    for file in URLS.keys():
-        filename = 'curl_' + file + '.csv'
-        result = process(filename, file)
-        send_data(result,file)
-except KeyboardInterrupt: 
-    exit(0)
-
+for target in targets.keys(): 
+        print("location:", os.getenv('location'))
+        print("provider:", os.getenv('provider'))
+        for fname in files:
+            print("location:", os.getenv('location'))
+            print("provider:", os.getenv('provider'))
+            print(target,fname)
+            experiment(target, fname)
