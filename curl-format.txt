@@ -1,1 +1,1 @@
-%{time_namelookup}, %{time_connect}, %{time_appconnect}, %{time_pretransfer}, %{time_redirect}, %{time_total}, %{size_download}, %{remote_ip}\n
+%{time_namelookup}, %{time_connect}, %{time_appconnect}, %{time_pretransfer}, %{time_redirect}, %{time_total}\n
