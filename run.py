@@ -27,7 +27,7 @@ columns = [
 ]
 
 def process(filename, _method, filename_list, server_location_list, datetime_list, backoff_list):
-    export_filename = '/home/ec2-user/' + _method + '-' + filename.replace('.', '-') +  '-finish.csv'
+    export_filename = '/home/azureuser/' + filename
     df = pd.read_csv(filename, names=columns)
     df['location'] = os.getenv('location')
     df['provider'] = os.getenv('provider')
