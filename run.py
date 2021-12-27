@@ -15,7 +15,7 @@ import datetime
 # starttransfer: The time, in seconds, it took from the start until the first byte was just about to be transferred. This includes time_pretransfer and also the time the server needed to calculate the result.
 # total: The total time, in seconds, that the full operation lasted. The time will be displayed with millisecond resolution.
 
-MAX_ITER = 2
+MAX_ITER = 100
 # targets = {'dns': 'https://dns.taa.computer'}
 targets = {'dns': 'https://dns.taa.computer', 'anycast': 'https://anycast.taa.computer', 'traditional': 'https://us.taa.computer', 'elastic': 'https://elastic.snaplogic.com/sl/js/designer/sl-min.js'}
 # targets = {'budgy': 'https://budgy.elastic.snaplogicdev.com/sl/js/designer/sl-min.js','elastic': 'https://elastic.snaplogic.com/sl/js/designer/sl-min.js','uat': 'https://uat.elastic.snaplogic.com/sl/js/designer/sl-min.js''https://uat.elastic.snaplogic.com/sl/js/designer/sl-min.js'}
@@ -41,7 +41,7 @@ def process(filename, _method, filename_list, server_location_list, datetime_lis
     return df
 
 def send_data(df,method,filename):
-    requests.post(url=f"http://meme.peem.in/capstone/store-json/{os.getenv('provider')}_{os.getenv('location')}_{method}_{filename}",data=df.to_json())
+    requests.post(url=f"http://meme.peem.in/capstone/store-json/backoff-{os.getenv('provider')}_{os.getenv('location')}_{method}_{filename}",data=df.to_json())
     print("Request Sent!")
 
 def experiment(_method, filename, datetime_list, server_location_list): 
@@ -72,4 +72,4 @@ for key in targets.keys():
         filename = key + '_' + file.replace('.', '-') + '.csv'
         result = process(filename, key, filename_list[file], server_location_list[key][file], datetime_list[key][file], backoff_list)
         print(result)
-        # send_data(result,key,filename)
+        send_data(result,key,filename)
