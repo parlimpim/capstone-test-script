@@ -16,8 +16,8 @@ import datetime
 # total: The total time, in seconds, that the full operation lasted. The time will be displayed with millisecond resolution.
 
 MAX_ITER = 2
-targets = {'dns': 'https://dns.taa.computer'}
-# targets = {'dns': 'https://dns.taa.computer', 'anycast': 'https://anycast.taa.computer', 'traditional': 'https://us.taa.computer', 'elastic': 'https://elastic.snaplogic.com/sl/js/designer/sl-min.js'}
+# targets = {'dns': 'https://dns.taa.computer'}
+targets = {'dns': 'https://dns.taa.computer', 'anycast': 'https://anycast.taa.computer', 'traditional': 'https://us.taa.computer', 'elastic': 'https://elastic.snaplogic.com/sl/js/designer/sl-min.js'}
 # targets = {'budgy': 'https://budgy.elastic.snaplogicdev.com/sl/js/designer/sl-min.js','elastic': 'https://elastic.snaplogic.com/sl/js/designer/sl-min.js','uat': 'https://uat.elastic.snaplogic.com/sl/js/designer/sl-min.js''https://uat.elastic.snaplogic.com/sl/js/designer/sl-min.js'}
 files  = ['sl-min-original-nostaic.js','sl-min-original.js']
 
@@ -67,6 +67,7 @@ for i in range(MAX_ITER):
 
 for key in targets.keys():
     for file in files:
+        if key == 'elastic' & file == 'sl-min-original.js': continue
         filename = key + '_' + file.replace('.', '-') + '.csv'
         result = process(filename, key, filename_list[file], server_location_list[key][file], datetime_list[key][file], backoff_list)
         print(result)
