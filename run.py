@@ -58,7 +58,7 @@ def experiment(_method, filename, datetime_list, server_location_list):
 backoff_list = ['1.1 secs' for i in range(MAX_ITER)]
 filename_list = {'sl-min-original-nostaic.js': ['sl-min-original-nostaic.js' for i in range(MAX_ITER)], 'sl-min-original.js': ['sl-min-original.js' for i in range(MAX_ITER)] }
 datetime_list = {'dns':{'sl-min-original-nostaic.js': [],'sl-min-original.js': []}, 'anycast':{'sl-min-original-nostaic.js': [],'sl-min-original.js': []},'traditional':{'sl-min-original-nostaic.js': [],'sl-min-original.js': []},'elastic':{'sl-min-original-nostaic.js': [],'sl-min-original.js': []}}
-server_location_list  = {'dns':{'sl-min-original-nostaic.js': [],'sl-min-original.js': []}, 'anycast':{'sl-min-original-nostaic.js': [],'sl-min-original.js': []},'traditional':{'sl-min-original-nostaic.js': [],'sl-min-original.js': []},'elastic':['oregon' for i in range(MAX_ITER)]}
+server_location_list  = {'dns':{'sl-min-original-nostaic.js': [],'sl-min-original.js': []}, 'anycast':{'sl-min-original-nostaic.js': [],'sl-min-original.js': []},'traditional':{'sl-min-original-nostaic.js': [],'sl-min-original.js': []},'elastic':{'sl-min-original-nostaic.js': ['oregon' for i in range(MAX_ITER)],'sl-min-original.js': ['oregon' for i in range(MAX_ITER)]}}
 for i in range(MAX_ITER):
         for key in targets.keys():
             for filename in files:
