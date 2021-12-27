@@ -27,6 +27,7 @@ columns = [
 ]
 
 def process(filename, _method, filename_list, server_location_list, datetime_list, backoff_list):
+    export_filename = '/home/ec2-user/' + _method + '-' + filename.replace('.', '-') +  '-finish.csv'
     df = pd.read_csv(filename, names=columns)
     df['location'] = os.getenv('location')
     df['provider'] = os.getenv('provider')
@@ -35,6 +36,7 @@ def process(filename, _method, filename_list, server_location_list, datetime_lis
     df['server_location'] = server_location_list
     df['datetime'] = datetime_list
     df['backoff'] = backoff_list
+    df.to_csv(export_filename,index=False)
     return df
 
 def send_data(df,method,filename):
