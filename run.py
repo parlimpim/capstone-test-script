@@ -46,8 +46,8 @@ def send_data(df,method,filename):
 
 def experiment(_method, filename, datetime_list, server_location_list): 
     out_name = _method + '_' + filename.replace('.', '-') + '.csv'
-    if _method != 'elastic': url = targets[_method] + '/' + filename
-    else: url = targets[_method]
+    url = targets[_method] + '/' + filename
+    if _method == 'elastic': url = targets[_method]
     os.system('curl '+ url + r' -H "Cache-Control: no-cache, no-store, must-revalidate" '+
         r'-H "Pragma: no-cache" -H "Expires: 0" -w "@curl-format.txt" ' +
         r'-o /dev/null -s >> ' + out_name
@@ -57,7 +57,7 @@ def experiment(_method, filename, datetime_list, server_location_list):
 
 backoff_list = ['1.1 secs' for i in range(MAX_ITER)]
 filename_list = {'sl-min-original-nostaic.js': ['sl-min-original-nostaic.js' for i in range(MAX_ITER)], 'sl-min-original.js': ['sl-min-original.js' for i in range(MAX_ITER)] }
-datetime_list = {'dns':{'sl-min-original-nostaic.js': [],'sl-min-original.js': []}, 'anycast':{'sl-min-original-nostaic.js': [],'sl-min-original.js': []},'traditional':{'sl-min-original-nostaic.js': [],'sl-min-original.js': []},'elastic':[]}
+datetime_list = {'dns':{'sl-min-original-nostaic.js': [],'sl-min-original.js': []}, 'anycast':{'sl-min-original-nostaic.js': [],'sl-min-original.js': []},'traditional':{'sl-min-original-nostaic.js': [],'sl-min-original.js': []},'elastic':{'sl-min-original-nostaic.js': [],'sl-min-original.js': []}}
 server_location_list  = {'dns':{'sl-min-original-nostaic.js': [],'sl-min-original.js': []}, 'anycast':{'sl-min-original-nostaic.js': [],'sl-min-original.js': []},'traditional':{'sl-min-original-nostaic.js': [],'sl-min-original.js': []},'elastic':['oregon' for i in range(MAX_ITER)]}
 for i in range(MAX_ITER):
         for key in targets.keys():
@@ -69,7 +69,6 @@ for i in range(MAX_ITER):
 
 for key in targets.keys():
     for file in files:
-        if key == 'elastic' & file == 'sl-min-original.js': continue
         filename = key + '_' + file.replace('.', '-') + '.csv'
         result = process(filename, key, filename_list[file], server_location_list[key][file], datetime_list[key][file], backoff_list)
         print(result)
