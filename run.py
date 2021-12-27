@@ -19,7 +19,7 @@ MAX_ITER = 2
 targets = {'dns': 'https://dns.taa.computer'}
 # targets = {'dns': 'https://dns.taa.computer', 'anycast': 'https://anycast.taa.computer', 'traditional': 'https://us.taa.computer', 'elastic': 'https://elastic.snaplogic.com/sl/js/designer/sl-min.js'}
 # targets = {'budgy': 'https://budgy.elastic.snaplogicdev.com/sl/js/designer/sl-min.js','elastic': 'https://elastic.snaplogic.com/sl/js/designer/sl-min.js','uat': 'https://uat.elastic.snaplogic.com/sl/js/designer/sl-min.js''https://uat.elastic.snaplogic.com/sl/js/designer/sl-min.js'}
-# files  = ['sl-min-original-nostaic.js']
+files  = ['sl-min-original-nostaic.js','sl-min-original.js']
 
 columns = [
     "time_namelookup", "time_connect", "time_appconnect",
@@ -48,22 +48,24 @@ def experiment(_method, filename, datetime_list, server_location_list):
         r'-H "Pragma: no-cache" -H "Expires: 0" -w "@curl-format.txt" ' +
         r'-o /dev/null -s >> ' + out_name
     )
-    datetime_list[_method].append(datetime.datetime.now())
-    if _method != 'elastic': server_location_list[_method].append(requests.get(targets[_method] + '/' + 'location.txt').text.strip())
+    datetime_list[_method][filename].append(datetime.datetime.now())
+    if _method != 'elastic': server_location_list[_method][filename].append(requests.get(targets[_method] + '/' + 'location.txt').text.strip())
 
-backoff_list = ['backoff 1 sec' for i in range(MAX_ITER)]
-filename_list = ['sl-min-original-nostaic.js' for i in range(MAX_ITER)]
-datetime_list = {'dns':[], 'anycast':[],'traditional':[],'elastic':[]}
-server_location_list  = {'dns':[], 'anycast':[],'traditional':[],'elastic':['oregon' for i in range(MAX_ITER)]}
+backoff_list = ['1.1 secs' for i in range(MAX_ITER)]
+filename_list = {'sl-min-original-nostaic.js': ['sl-min-original-nostaic.js' for i in range(MAX_ITER)], 'sl-min-original.js': ['sl-min-original.js' for i in range(MAX_ITER)] }
+datetime_list = {'dns':{'sl-min-original-nostaic.js': [],'sl-min-original.js': []}, 'anycast':{'sl-min-original-nostaic.js': [],'sl-min-original.js': []},'traditional':{'sl-min-original-nostaic.js': [],'sl-min-original.js': []},'elastic':[]}
+server_location_list  = {'dns':{'sl-min-original-nostaic.js': [],'sl-min-original.js': []}, 'anycast':{'sl-min-original-nostaic.js': [],'sl-min-original.js': []},'traditional':{'sl-min-original-nostaic.js': [],'sl-min-original.js': []},'elastic':['oregon' for i in range(MAX_ITER)]}
 for i in range(MAX_ITER):
         for key in targets.keys():
-            experiment(key, 'sl-min-original-nostaic.js', datetime_list, server_location_list)
-            print(f'[{i}] {key}')
+            for filename in files:
+                experiment(key, filename, datetime_list, server_location_list)
+                print(f'[{i}] {key} {filename}')
         print(f" [{i}] Backing off from keep alive ... ")
-        time.sleep(1)
+        time.sleep(1.1)
 
 for key in targets.keys():
-    filename = key + '_sl-min-original-nostaic-js.csv'
-    result = process(filename, key, filename_list, server_location_list[key], datetime_list[key], backoff_list)
-    print(result)
-    # send_data(result,key,filename)
+    for file in files:
+        filename = key + '_' + file.replace('.', '-') + '.csv'
+        result = process(filename, key, filename_list[file], server_location_list[key][file], datetime_list[key][file], backoff_list)
+        print(result)
+        # send_data(result,key,filename)
