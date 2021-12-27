@@ -1,7 +1,8 @@
 import os
-import json
+import time
 import requests
 import pandas as pd
+import datetime
 
 # Brief info found at
 # https://netbeez.net/blog/http-transaction-timing-breakdown-with-curl/
@@ -14,45 +15,55 @@ import pandas as pd
 # starttransfer: The time, in seconds, it took from the start until the first byte was just about to be transferred. This includes time_pretransfer and also the time the server needed to calculate the result.
 # total: The total time, in seconds, that the full operation lasted. The time will be displayed with millisecond resolution.
 
-MAX_ITER = 100
-targets = {'dns': 'https://dns.taa.computer', 'anycast': 'https://anycast.taa.computer', 'traditional': 'https://us.taa.computer'}
-files  = ['sl-min-original-nostaic.js']
+MAX_ITER = 2
+targets = {'dns': 'https://dns.taa.computer'}
+# targets = {'dns': 'https://dns.taa.computer', 'anycast': 'https://anycast.taa.computer', 'traditional': 'https://us.taa.computer', 'elastic': 'https://elastic.snaplogic.com/sl/js/designer/sl-min.js'}
+# targets = {'budgy': 'https://budgy.elastic.snaplogicdev.com/sl/js/designer/sl-min.js','elastic': 'https://elastic.snaplogic.com/sl/js/designer/sl-min.js','uat': 'https://uat.elastic.snaplogic.com/sl/js/designer/sl-min.js''https://uat.elastic.snaplogic.com/sl/js/designer/sl-min.js'}
+# files  = ['sl-min-original-nostaic.js']
 
 columns = [
     "time_namelookup", "time_connect", "time_appconnect",
     "time_pretransfer", "time_redirect", "time_total"
 ]
 
-def process(filename, _method, testedfile, server_location):
+def process(filename, _method, filename_list, server_location_list, datetime_list, backoff_list):
     df = pd.read_csv(filename, names=columns)
     df['location'] = os.getenv('location')
     df['provider'] = os.getenv('provider')
     df['method'] = _method
-    df['filename'] = testedfile
-    df['server_location'] = server_location.strip()
+    df['filename'] = filename_list
+    df['server_location'] = server_location_list
+    df['datetime'] = datetime_list
+    df['backoff'] = backoff_list
     return df
 
 def send_data(df,method,filename):
     requests.post(url=f"http://meme.peem.in/capstone/store-json/{os.getenv('provider')}_{os.getenv('location')}_{method}_{filename}",data=df.to_json())
     print("Request Sent!")
 
-def experiment(_method, filename): 
+def experiment(_method, filename, datetime_list, server_location_list): 
     out_name = _method + '_' + filename.replace('.', '-') + '.csv'
-    url = targets[_method] + '/' + filename
-    for i in range(MAX_ITER):
-        os.system('curl '+ url + r' -H "Cache-Control: no-cache, no-store, must-revalidate" '+
-            r'-H "Pragma: no-cache" -H "Expires: 0" -w "@curl-format.txt" ' +
-            r'-o /dev/null -s >> ' + out_name
-        )
-    server_location = requests.get(targets[_method] + '/' + 'location.txt')
-    result = process(out_name, _method, filename, server_location.text)
-    send_data(result,_method,filename)
+    if _method != 'elastic': url = targets[_method] + '/' + filename
+    os.system('curl '+ url + r' -H "Cache-Control: no-cache, no-store, must-revalidate" '+
+        r'-H "Pragma: no-cache" -H "Expires: 0" -w "@curl-format.txt" ' +
+        r'-o /dev/null -s >> ' + out_name
+    )
+    datetime_list[_method].append(datetime.datetime.now())
+    if _method != 'elastic': server_location_list[_method].append(requests.get(targets[_method] + '/' + 'location.txt').text.strip())
 
-for target in targets.keys(): 
-        print("location:", os.getenv('location'))
-        print("provider:", os.getenv('provider'))
-        for fname in files:
-            print("location:", os.getenv('location'))
-            print("provider:", os.getenv('provider'))
-            print(target,fname)
-            experiment(target, fname)
+backoff_list = ['backoff 1 sec' for i in range(MAX_ITER)]
+filename_list = ['sl-min-original-nostaic.js' for i in range(MAX_ITER)]
+datetime_list = {'dns':[], 'anycast':[],'traditional':[],'elastic':[]}
+server_location_list  = {'dns':[], 'anycast':[],'traditional':[],'elastic':['oregon' for i in range(MAX_ITER)]}
+for i in range(MAX_ITER):
+        for key in targets.keys():
+            experiment(key, 'sl-min-original-nostaic.js', datetime_list, server_location_list)
+            print(f'[{i}] {key}')
+        print(f" [{i}] Backing off from keep alive ... ")
+        time.sleep(1)
+
+for key in targets.keys():
+    filename = key + '_sl-min-original-nostaic-js.csv'
+    result = process(filename, key, filename_list, server_location_list[key], datetime_list[key], backoff_list)
+    print(result)
+    # send_data(result,key,filename)
