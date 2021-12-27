@@ -28,6 +28,7 @@ columns = [
 
 def process(filename, _method, filename_list, server_location_list, datetime_list, backoff_list):
     export_filename = '/home/azureuser/' + filename
+    # export_filename = filename
     df = pd.read_csv(filename, names=columns)
     df['location'] = os.getenv('location')
     df['provider'] = os.getenv('provider')
@@ -46,6 +47,7 @@ def send_data(df,method,filename):
 def experiment(_method, filename, datetime_list, server_location_list): 
     out_name = _method + '_' + filename.replace('.', '-') + '.csv'
     if _method != 'elastic': url = targets[_method] + '/' + filename
+    else: url = targets[_method]
     os.system('curl '+ url + r' -H "Cache-Control: no-cache, no-store, must-revalidate" '+
         r'-H "Pragma: no-cache" -H "Expires: 0" -w "@curl-format.txt" ' +
         r'-o /dev/null -s >> ' + out_name
